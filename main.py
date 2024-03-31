@@ -95,9 +95,8 @@ class ModuleName(interactions.Extension):
         #     file_content: str = await afp.read()
         # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
         # internal_t.internal_t_testfunc()
-        await ctx.defer()
-        
-        await ctx.channel.send(
+
+        await ctx.send(
             embed=interactions.Embed(title="點擊下方按鈕獲得吃瓜觀光團身份組"),
             components=[button],
         )
@@ -119,9 +118,8 @@ class ModuleName(interactions.Extension):
     #         f"User {event.message.author.display_name} sent '{event.message.content}'"
     #     )
     @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
-    async def my_callback(ctx: interactions.ComponentContext):
-            await ctx.send("You clicked it!")
-
+    async def my_callback(self, ctx: interactions.ComponentContext):
+        await ctx.send("You clicked it!")
 
     # You can even create a background task to run as you wish.
     # Refer to https://interactions-py.github.io/interactions.py/Guides/40%20Tasks/ for guides
