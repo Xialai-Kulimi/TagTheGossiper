@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import interactions
+from interactions import Button, ButtonStyle, listen
+from interactions.api.events import Component
+
 
 # Use the following method to import the internal module in the current same directory
 from . import internal_t
@@ -43,6 +46,13 @@ console = Console()
 Replace the ModuleName with any name you'd like
 """
 
+
+# defining and sending the button
+button = Button(
+    custom_id="kulimi_TagTheGossiper_give_gossiper_role",
+    style=ButtonStyle.GREEN,
+    label="點擊獲得吃瓜觀光團身份組",
+)
 
 class ModuleName(interactions.Extension):
     module_base: interactions.SlashCommand = interactions.SlashCommand(
@@ -102,7 +112,15 @@ class ModuleName(interactions.Extension):
         console.log(
             f"User {event.message.author.display_name} sent '{event.message.content}'"
         )
+    
 
+    @listen(Component)
+    async def on_component(event: Component):
+        ctx = event.ctx
+
+        match ctx.custom_id:
+            case "kulimi_TagTheGossiper_give_gossiper_role":
+                await ctx.send("You clicked it!")
     # You can even create a background task to run as you wish.
     # Refer to https://interactions-py.github.io/interactions.py/Guides/40%20Tasks/ for guides
     # Refer to https://interactions-py.github.io/interactions.py/API%20Reference/API%20Reference/models/Internal/tasks/ for detailed APIs
