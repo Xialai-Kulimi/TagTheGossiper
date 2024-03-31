@@ -95,6 +95,8 @@ class ModuleName(interactions.Extension):
         #     file_content: str = await afp.read()
         # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
         # internal_t.internal_t_testfunc()
+        await ctx.defer()
+        
         await ctx.channel.send(
             embed=interactions.Embed(title="點擊下方按鈕獲得吃瓜觀光團身份組"),
             components=[button],
