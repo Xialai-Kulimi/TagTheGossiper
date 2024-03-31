@@ -116,14 +116,10 @@ class ModuleName(interactions.Extension):
     #     console.log(
     #         f"User {event.message.author.display_name} sent '{event.message.content}'"
     #     )
+    @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
+    async def my_callback(ctx: interactions.ComponentContext):
+            await ctx.send("You clicked it!")
 
-    @listen(Component)
-    async def on_component(event: Component):
-        ctx = event.ctx
-
-        match ctx.custom_id:
-            case "kulimi_TagTheGossiper_give_gossiper_role":
-                await ctx.send("You clicked it!")
 
     # You can even create a background task to run as you wish.
     # Refer to https://interactions-py.github.io/interactions.py/Guides/40%20Tasks/ for guides
