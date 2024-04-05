@@ -47,7 +47,21 @@ class Config(BaseModel):
     gossiper_base: str = "吃瓜观光团"
 
 
-config = Config()
+def load_config() -> Config:
+    with open("config.json", "rw") as f:
+        try:
+            config = Config.model_validate_json(f.read())
+        except Exception as e:
+            console.log(f"[red] Error occur: {e} when load_config")
+            config = Config()
+
+    return config
+
+
+def save_config(config: Config):
+    with open("config.json", "w") as f:
+        f.write(config.model_dump_json(indent=4))
+
 
 # defining and sending the button
 button = Button(
@@ -57,153 +71,47 @@ button = Button(
 )
 
 
-# def load_config():
-#     with open("config.json", "r") as f:
-#         config = json.load(f)
-#     return config
-
-# def save_config(config):
-#     with open("config.json", "w") as f:
-#         json.dump(config, f)
+@interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
+async def my_callback(ctx: interactions.ComponentContext):
+    await ctx.send("You clicked it!")
 
 
 class Gossiper(interactions.Extension):
     module_base: interactions.SlashCommand = interactions.SlashCommand(
         name="tag_the_gossiper", description="吃瓜觀光團相關指令"
     )
-    # module_group: interactions.SlashCommand = module_base.group(
-    #     name="replace_your_command_group_here",
-    #     description="Replace here for the group command descriptions",
-    # )
-
-    # @module_group.subcommand(
-    #     "ping", sub_cmd_description="Replace the description of this command"
-    # )
-    # @interactions.slash_option(
-    #     name="option_name",
-    #     description="Option description",
-    #     required=True,
-    #     opt_type=interactions.OptionType.STRING,
-    # )
-    # async def module_group_ping(self, ctx: interactions.SlashContext, option_name: str):
-    #     await ctx.send(f"Pong {option_name}!")
-    #     internal_t.internal_t_testfunc()
-
-    @module_base.subcommand(
-        "help",
-        sub_cmd_description="顯示吃瓜觀光團幫助訊息",
-    )
-    # @interactions.slash_option(
-    #     name="option_name",
-    #     description="Option description",
-    #     required=True,
-    #     opt_type=interactions.OptionType.STRING,
-    # )
-    async def help(self, ctx: interactions.SlashContext):
-        # The local file path is inside the directory of the module's main script file
-        # async with aiofiles.open(
-        #     f"{os.path.dirname(__file__)}/example_file.txt"
-        # ) as afp:
-        #     file_content: str = await afp.read()
-        # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
-        # internal_t.internal_t_testfunc()
-
-        await ctx.send(
-            embed=interactions.Embed(title="幫助", text="help"),
-            components=[button],
-        )
 
     @module_base.subcommand("config", sub_cmd_description="設定吃瓜觀光團的相關設定")
-    # @interactions.slash_option(
-    #     name="new_base",
-    #     description=f"設置新的共用基底，目前為「{config.gossiper_base}」，若留空則會設置為「吃瓜观光团」",
-    #     required=False,
-    #     opt_type=interactions.OptionType.STRING,
-    # )
     async def config(self, ctx: interactions.SlashContext):
-        # The local file path is inside the directory of the module's main script file
-        # async with aiofiles.open(
-        #     f"{os.path.dirname(__file__)}/example_file.txt"
-        # ) as afp:
-        #     file_content: str = await afp.read()
-        # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
-        # internal_t.internal_t_testfunc()
+
+        config = load_config()
         my_modal = Modal(
-            ShortText(label="設定共用基底，會將所有包含共同基底的身份組視為吃瓜觀光團身份組", custom_id="new_base", placeholder=f"目前為「{config.gossiper_base}」"),
+            ShortText(
+                label="設定共用基底，會將所有包含共同基底的身份組視為吃瓜觀光團身份組",
+                custom_id="new_base",
+                placeholder=f"目前為「{config.gossiper_base}」",
+            ),
             title="吃瓜觀光團設定",
         )
         await ctx.send_modal(modal=my_modal)
-        
+
         modal_ctx: ModalContext = await ctx.bot.wait_for_modal(my_modal)
 
-    # extract the answers from the responses dictionary
         new_base = modal_ctx.responses["new_base"]
-        
 
-        # await modal_ctx.send(f"Short text: {short_text}, Paragraph text: {long_text}", ephemeral=True)
         config.gossiper_base = new_base
-        await ctx.send(
-            f"{config}"
-        )
+        save_config(config)
+        await ctx.send(f"{config}", ephemeral=True)
 
     @module_base.subcommand(
         "send_role_giver", sub_cmd_description="傳送獲得吃瓜觀光團的獲得按鈕到此頻道"
     )
-    # @interactions.slash_option(
-    #     name="option_name",
-    #     description="Option description",
-    #     required=True,
-    #     opt_type=interactions.OptionType.STRING,
-    # )
+    
     async def send_role_giver(self, ctx: interactions.SlashContext):
-        # The local file path is inside the directory of the module's main script file
-        # async with aiofiles.open(
-        #     f"{os.path.dirname(__file__)}/example_file.txt"
-        # ) as afp:
-        #     file_content: str = await afp.read()
-        # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
-        # internal_t.internal_t_testfunc()
-
-        await ctx.send(
+    
+        await ctx.respond(
             embed=interactions.Embed(title="點擊下方按鈕獲得吃瓜觀光團身份組"),
             components=[button],
         )
 
-    # @interactions.listen(InteractionCreate)
-    # async def on_interactioncreate(self, event: InteractionCreate):
-    #     """
-    #     Event listener when a new interaction is created
-    #     """
-    #     console.log(event.interaction)
-    #     console.log(event)
-
-    # @interactions.listen(MessageCreate)
-    # async def on_messagecreate(self, event: MessageCreate):
-    #     """
-    #     Event listener when a new message is created
-    #     """
-    #     console.log(
-    #         f"User {event.message.author.display_name} sent '{event.message.content}'"
-    #     )
-    @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
-    async def my_callback(self, ctx: interactions.ComponentContext):
-        await ctx.send("You clicked it!")
-
-    # You can even create a background task to run as you wish.
-    # Refer to https://interactions-py.github.io/interactions.py/Guides/40%20Tasks/ for guides
-    # Refer to https://interactions-py.github.io/interactions.py/API%20Reference/API%20Reference/models/Internal/tasks/ for detailed APIs
-    # @Task.create(IntervalTrigger(minutes=1))
-    # async def task_everyminute(self):
-    #     channel: interactions.TYPE_MESSAGEABLE_CHANNEL = self.bot.get_guild(
-    #         1234567890
-    #     ).get_channel(1234567890)
-    #     await channel.send("Background task send every one minute")
-    #     print("Background Task send every one minute")
-
-    # # The command to start the task
-    # @module_base.subcommand(
-    #     "start_task", sub_cmd_description="Start the background task"
-    # )
-    # async def module_base_starttask(self, ctx: interactions.SlashContext):
-    #     self.task_everyminute.start()
-    #     await ctx.send("Task started")
+    
