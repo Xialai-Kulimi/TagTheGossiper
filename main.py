@@ -25,13 +25,7 @@ from interactions.api.events import Component
 
 # Use the following method to import the internal module in the current same directory
 from . import internal_t
-
-# Import the os module to get the parent path to the local files
-import os
-
-# aiofiles module is recommended for file operation
-import aiofiles
-
+from pydantic import BaseModel
 # You can listen to the interactions.py event
 from interactions.api.events import MessageCreate, InteractionCreate
 
@@ -43,15 +37,11 @@ import json
 
 console = Console()
 
-"""
-Replace the ModuleName with any name you'd like
-"""
 
-class BaseEmbed(interactions.Embed):
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+class Config(BaseModel):
+    gossiper_base: str = '吃瓜观光团'
 
+config = Config()
 
 # defining and sending the button
 button = Button(
@@ -61,14 +51,14 @@ button = Button(
 )
 
 
-def load_config():
-    with open("config.json", "r") as f:
-        config = json.load(f)
-    return config
+# def load_config():
+#     with open("config.json", "r") as f:
+#         config = json.load(f)
+#     return config
 
-def save_config(config):
-    with open("config.json", "w") as f:
-        json.dump(config, f)
+# def save_config(config):
+#     with open("config.json", "w") as f:
+#         json.dump(config, f)
 
 class ModuleName(interactions.Extension):
     module_base: interactions.SlashCommand = interactions.SlashCommand(
@@ -148,8 +138,8 @@ class ModuleName(interactions.Extension):
     )
     @interactions.slash_option(
         name="new_base",
-        description="共用基底，預設為「吃瓜观光团」",
-        required=True,
+        description=f"設置新的共用基底，目前為「{config.gossiper_base}」，若留空則會設置為「吃瓜观光团」",
+        required=False,
         opt_type=interactions.OptionType.STRING, 
     )
     async def set_gossiper_base(self, ctx: interactions.SlashContext, new_base = '吃瓜观光团'):
@@ -161,8 +151,9 @@ class ModuleName(interactions.Extension):
         # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
         # internal_t.internal_t_testfunc()
 
+        config.gossiper_base = new_base
         await ctx.send(
-            f"new_base: {new_base}"
+            f"{config}"
         )
 
     @module_base.subcommand(
