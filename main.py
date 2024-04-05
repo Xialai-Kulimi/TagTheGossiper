@@ -19,18 +19,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import interactions
-from interactions import Button, ButtonStyle, listen
+from interactions import (
+    Button,
+    ButtonStyle,
+    ModalContext,
+    Modal,
+    ShortText,
+)
 from interactions.api.events import Component
-
 
 # Use the following method to import the internal module in the current same directory
 from . import internal_t
 from pydantic import BaseModel
+
 # You can listen to the interactions.py event
 from interactions.api.events import MessageCreate, InteractionCreate
 
 # You can create a background task
-from interactions import Task, IntervalTrigger
 
 from rich.console import Console
 import json
@@ -39,7 +44,8 @@ console = Console()
 
 
 class Config(BaseModel):
-    gossiper_base: str = '吃瓜观光团'
+    gossiper_base: str = "吃瓜观光团"
+
 
 config = Config()
 
@@ -60,10 +66,10 @@ button = Button(
 #     with open("config.json", "w") as f:
 #         json.dump(config, f)
 
-class ModuleName(interactions.Extension):
+
+class Gossiper(interactions.Extension):
     module_base: interactions.SlashCommand = interactions.SlashCommand(
-        name="tag_the_gossiper",
-        description="吃瓜觀光團相關指令",
+        name="tag_the_gossiper", description="吃瓜觀光團相關指令"
     )
     # module_group: interactions.SlashCommand = module_base.group(
     #     name="replace_your_command_group_here",
@@ -82,10 +88,10 @@ class ModuleName(interactions.Extension):
     # async def module_group_ping(self, ctx: interactions.SlashContext, option_name: str):
     #     await ctx.send(f"Pong {option_name}!")
     #     internal_t.internal_t_testfunc()
-    
-    @module_base.subcommand(
-        "help", sub_cmd_description="顯示吃瓜觀光團幫助訊息",
 
+    @module_base.subcommand(
+        "help",
+        sub_cmd_description="顯示吃瓜觀光團幫助訊息",
     )
     # @interactions.slash_option(
     #     name="option_name",
@@ -103,21 +109,18 @@ class ModuleName(interactions.Extension):
         # internal_t.internal_t_testfunc()
 
         await ctx.send(
-            embed=interactions.Embed(title="幫助", text='help'),
+            embed=interactions.Embed(title="幫助", text="help"),
             components=[button],
         )
 
-
-    @module_base.subcommand(
-        "show", sub_cmd_description="顯示目前吃瓜觀光團模組設定"
-    )
+    @module_base.subcommand("config", sub_cmd_description="設定吃瓜觀光團的相關設定")
     # @interactions.slash_option(
-    #     name="option_name",
-    #     description="Option description",
-    #     required=True,
+    #     name="new_base",
+    #     description=f"設置新的共用基底，目前為「{config.gossiper_base}」，若留空則會設置為「吃瓜观光团」",
+    #     required=False,
     #     opt_type=interactions.OptionType.STRING,
     # )
-    async def show(self, ctx: interactions.SlashContext):
+    async def config(self, ctx: interactions.SlashContext):
         # The local file path is inside the directory of the module's main script file
         # async with aiofiles.open(
         #     f"{os.path.dirname(__file__)}/example_file.txt"
@@ -125,32 +128,19 @@ class ModuleName(interactions.Extension):
         #     file_content: str = await afp.read()
         # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
         # internal_t.internal_t_testfunc()
-
-        await ctx.send(
-            embed=interactions.Embed(title="幫助", text='show'),
-            components=[button],
+        my_modal = Modal(
+            ShortText(label="設定共用基底，會將所有包含共同基底的身份組視為吃瓜觀光團身份組", custom_id="new_base", placeholder=f"目前為「{config.gossiper_base}」"),
+            title="吃瓜觀光團設定",
         )
+        await ctx.send_modal(modal=my_modal)
+        
+        modal_ctx: ModalContext = await ctx.bot.wait_for_modal(my_modal)
 
+    # extract the answers from the responses dictionary
+        new_base = modal_ctx.responses["new_base"]
+        
 
-
-    @module_base.subcommand(
-        "set_gossiper_base", sub_cmd_description="設定吃瓜觀光團身份組的共用基底，所有包含此基底的身份組都會被視為吃瓜觀光團身份組"
-    )
-    @interactions.slash_option(
-        name="new_base",
-        description=f"設置新的共用基底，目前為「{config.gossiper_base}」，若留空則會設置為「吃瓜观光团」",
-        required=False,
-        opt_type=interactions.OptionType.STRING, 
-    )
-    async def set_gossiper_base(self, ctx: interactions.SlashContext, new_base = '吃瓜观光团'):
-        # The local file path is inside the directory of the module's main script file
-        # async with aiofiles.open(
-        #     f"{os.path.dirname(__file__)}/example_file.txt"
-        # ) as afp:
-        #     file_content: str = await afp.read()
-        # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
-        # internal_t.internal_t_testfunc()
-
+        # await modal_ctx.send(f"Short text: {short_text}, Paragraph text: {long_text}", ephemeral=True)
         config.gossiper_base = new_base
         await ctx.send(
             f"{config}"
