@@ -39,12 +39,18 @@ from interactions.api.events import MessageCreate, InteractionCreate
 from interactions import Task, IntervalTrigger
 
 from rich.console import Console
+import json
 
 console = Console()
 
 """
 Replace the ModuleName with any name you'd like
 """
+
+class BaseEmbed(interactions.Embed):
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 
 # defining and sending the button
@@ -54,6 +60,15 @@ button = Button(
     label="點擊獲得吃瓜觀光團身份組",
 )
 
+
+def load_config():
+    with open("config.json", "r") as f:
+        config = json.load(f)
+    return config
+
+def save_config(config):
+    with open("config.json", "w") as f:
+        json.dump(config, f)
 
 class ModuleName(interactions.Extension):
     module_base: interactions.SlashCommand = interactions.SlashCommand(
@@ -77,6 +92,78 @@ class ModuleName(interactions.Extension):
     # async def module_group_ping(self, ctx: interactions.SlashContext, option_name: str):
     #     await ctx.send(f"Pong {option_name}!")
     #     internal_t.internal_t_testfunc()
+    
+    @module_base.subcommand(
+        "help", sub_cmd_description="顯示吃瓜觀光團幫助訊息",
+
+    )
+    # @interactions.slash_option(
+    #     name="option_name",
+    #     description="Option description",
+    #     required=True,
+    #     opt_type=interactions.OptionType.STRING,
+    # )
+    async def help(self, ctx: interactions.SlashContext):
+        # The local file path is inside the directory of the module's main script file
+        # async with aiofiles.open(
+        #     f"{os.path.dirname(__file__)}/example_file.txt"
+        # ) as afp:
+        #     file_content: str = await afp.read()
+        # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
+        # internal_t.internal_t_testfunc()
+
+        await ctx.send(
+            embed=interactions.Embed(title="幫助", text='help'),
+            components=[button],
+        )
+
+
+    @module_base.subcommand(
+        "show", sub_cmd_description="顯示目前吃瓜觀光團模組設定"
+    )
+    # @interactions.slash_option(
+    #     name="option_name",
+    #     description="Option description",
+    #     required=True,
+    #     opt_type=interactions.OptionType.STRING,
+    # )
+    async def show(self, ctx: interactions.SlashContext):
+        # The local file path is inside the directory of the module's main script file
+        # async with aiofiles.open(
+        #     f"{os.path.dirname(__file__)}/example_file.txt"
+        # ) as afp:
+        #     file_content: str = await afp.read()
+        # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
+        # internal_t.internal_t_testfunc()
+
+        await ctx.send(
+            embed=interactions.Embed(title="幫助", text='show'),
+            components=[button],
+        )
+
+
+
+    @module_base.subcommand(
+        "set_gossiper_base", sub_cmd_description="設定吃瓜觀光團身份組的共用基底，所有包含此基底的身份組都會被視為吃瓜觀光團身份組"
+    )
+    @interactions.slash_option(
+        name="new_base",
+        description="共用基底，預設為「吃瓜观光团」",
+        required=True,
+        opt_type=interactions.OptionType.STRING, 
+    )
+    async def set_gossiper_base(self, ctx: interactions.SlashContext, new_base = '吃瓜观光团'):
+        # The local file path is inside the directory of the module's main script file
+        # async with aiofiles.open(
+        #     f"{os.path.dirname(__file__)}/example_file.txt"
+        # ) as afp:
+        #     file_content: str = await afp.read()
+        # await ctx.send(f"Pong {option_name}!\nFile content: {file_content}")
+        # internal_t.internal_t_testfunc()
+
+        await ctx.send(
+            f"new_base: {new_base}"
+        )
 
     @module_base.subcommand(
         "send_role_giver", sub_cmd_description="傳送獲得吃瓜觀光團的獲得按鈕到此頻道"
@@ -87,7 +174,7 @@ class ModuleName(interactions.Extension):
     #     required=True,
     #     opt_type=interactions.OptionType.STRING,
     # )
-    async def module_group_pong(self, ctx: interactions.SlashContext):
+    async def send_role_giver(self, ctx: interactions.SlashContext):
         # The local file path is inside the directory of the module's main script file
         # async with aiofiles.open(
         #     f"{os.path.dirname(__file__)}/example_file.txt"
