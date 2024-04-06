@@ -162,10 +162,11 @@ class Gossiper(interactions.Extension):
         modal_ctx: ModalContext = await ctx.bot.wait_for_modal(my_modal)
 
         new_base = modal_ctx.responses["new_base"]
+        await modal_ctx.respond()
 
         config.gossiper_base = new_base
         save_config(config)
-        await ctx.respond(f"{config}", ephemeral=True)
+        await ctx.respond(f"已設定，新的設定如下\n```py\n{config}\n```", ephemeral=True)
 
     @module_base.subcommand(
         "send_role_giver", sub_cmd_description="傳送獲得吃瓜觀光團的獲得按鈕到此頻道"
