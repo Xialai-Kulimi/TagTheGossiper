@@ -176,7 +176,7 @@ class Gossiper(interactions.Extension):
             embed=interactions.Embed(
                 title="吃瓜觀光團模組",
                 description=f"""
-吃瓜觀光團模組主要是為了解決吃瓜觀光團管理、新建、提及等等方面的不方面。
+吃瓜觀光團模組主要是為了解決吃瓜觀光團管理、新建、提及等等方面的不方便。
 
 ## 介紹
 0. 只有法官可以使用本模組的指令。
