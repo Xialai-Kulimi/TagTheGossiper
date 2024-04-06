@@ -209,7 +209,7 @@ class Gossiper(interactions.Extension):
     @module_base.subcommand(
         "tag_the_gossiper", sub_cmd_description="提及所有吃瓜觀光團身份組到這個頻道"
     )
-    async def send_role_giver(self, ctx: interactions.SlashContext):
+    async def tag_the_gossiper(self, ctx: interactions.SlashContext):
 
         await ctx.respond(
             f"{' '.join([r.mention for r in get_all_gossiper_roles(ctx.guild)])}"
