@@ -1,3 +1,4 @@
 # 20240406
 - Complete the first version.
 - Add tag_the_gossiper command.
+- Add judge check for all commands.

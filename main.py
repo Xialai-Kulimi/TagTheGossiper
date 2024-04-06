@@ -26,6 +26,7 @@ from interactions import (
     Modal,
     ShortText,
     check,
+    has_role,
 )
 from interactions.api.events import Component
 
@@ -46,6 +47,13 @@ console = Console()
 MAX_MEMBER_PER_ROLE = 100
 
 avaliable_suffix = [""] + [str(i + 2) for i in range(500)]
+
+JUDGE_ROLE_ID = 1210108577008853012
+
+
+def check_is_admin(ctx: interactions.SlashContext):
+
+    return ctx.author.has_role(JUDGE_ROLE_ID) or ctx.author.id in ctx.bot.owner_ids
 
 
 class Config(BaseModel):
@@ -146,11 +154,12 @@ async def fix_gossiper_role(guild: interactions.Guild):
 
 class Gossiper(interactions.Extension):
     module_base: interactions.SlashCommand = interactions.SlashCommand(
-        name="tag_the_gossiper", description="吃瓜觀光團相關指令"
+        name="tag_the_gossiper",
+        description="吃瓜觀光團相關指令",
+        checks=[check_is_admin],
     )
 
     @module_base.subcommand("config", sub_cmd_description="設定吃瓜觀光團的相關設定")
-    @check()
     async def config(self, ctx: interactions.SlashContext):
 
         config = load_config()
@@ -184,6 +193,15 @@ class Gossiper(interactions.Extension):
         )
         await ctx.respond("已傳送獲得吃瓜觀光團按鈕到此頻道", ephemeral=True)
 
+    @module_base.subcommand(
+        "tag", sub_cmd_description="提及所有吃瓜觀光團身份組"
+    )
+    async def tag(self, ctx: interactions.SlashContext):
+
+        await ctx.respond(
+            f"{' '.join([r.mention for r in get_all_gossiper_roles(ctx.guild)])}"
+        )
+
     @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
     async def handle_give_gossiper_role(self, ctx: interactions.ComponentContext):
         config = load_config()
@@ -205,12 +223,3 @@ class Gossiper(interactions.Extension):
             await ctx.respond("添加失敗，請向管理員聯絡", ephemeral=True)
         # clean current gossiper roles
         await fix_gossiper_role(ctx.guild)
-
-    @module_base.subcommand(
-        "tag", sub_cmd_description="提及所有吃瓜觀光團身份組到這個頻道"
-    )
-    async def tag(self, ctx: interactions.SlashContext):
-
-        await ctx.respond(
-            f"{' '.join([r.mention for r in get_all_gossiper_roles(ctx.guild)])}"
-        )
