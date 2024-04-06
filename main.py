@@ -42,7 +42,7 @@ import json
 
 console = Console()
 
-MAX_MEMBER_PER_ROLE = 1
+MAX_MEMBER_PER_ROLE = 100
 
 avaliable_suffix = [""] + [str(i + 2) for i in range(500)]
 
