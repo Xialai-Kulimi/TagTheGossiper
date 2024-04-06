@@ -116,7 +116,7 @@ async def create_new_gossiper_role(guild: interactions.Guild) -> interactions.Ro
             name=config.gossiper_base + avaliable_suffix[0],
             permissions=0,
             hoist=False,
-            mentionable=False,
+            mentionable=True,
             icon=None,
             reason="吃瓜觀光團模組：建立新的吃瓜觀光團身份組",
         )
