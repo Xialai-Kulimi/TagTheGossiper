@@ -199,7 +199,7 @@ class Gossiper(interactions.Extension):
     async def tag(self, ctx: interactions.SlashContext):
 
         await ctx.respond(
-            f"{' '.join([r.mention for r in get_all_gossiper_roles(ctx.guild)])}"
+            f"{' '.join([r.mention for r in get_all_gossiper_roles(ctx.guild)])}", allowed_mentions=interactions.AllowedMentions.all()
         )
 
     @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
