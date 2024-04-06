@@ -168,11 +168,20 @@ class Gossiper(interactions.Extension):
                 title="吃瓜觀光團模組",
                 description=f"""
 吃瓜觀光團模組主要是為了解決吃瓜觀光團管理、新建、提及等等方面的不方面。
-其運作原理為：
+
+## 介紹
+0. 只有法官可以使用本模組的指令。
 1. 吃瓜觀光團身份組的判斷條件為身份組名稱包含共用基底，共用基底可以透過 `config` 指令設定，預設為「吃瓜观光团」，目前為「{config.gossiper_base}」
 2. 每個吃瓜觀光團身份組最多應該只有{MAX_MEMBER_PER_ROLE}人。
 3. 按下按鈕後，如果有低於一百人的吃瓜觀光團身份組，則直接將其加入該身份組
 4. 如果沒有可用的身份組，將會用現有的吃瓜觀光團身份組建立新的吃瓜觀光團身份組。
+
+## 指令
+- `config`：設定吃瓜觀光團的設定，目前僅可設定吃瓜觀光團的共用基底。
+- `send_role_giver`：在當前頻道傳送一個可以添加吃瓜觀光團身份組的按鈕。
+- `tag`：提及所有的吃瓜觀光團身份組。
+- `manual_fix`：為本群組的吃瓜觀光團身份組超出一百人的部分重新分配吃瓜觀光團身份組。
+
 """,
                 color=0xFF5252,
             )
@@ -216,7 +225,7 @@ class Gossiper(interactions.Extension):
     
     
     @module_base.subcommand(
-        "manual_fix", sub_cmd_description="提及所有吃瓜觀光團身份組"
+        "manual_fix", sub_cmd_description="手動修復所有成員的吃瓜觀光團身份組狀態"
     )
     async def manual_fix(self, ctx: interactions.SlashContext):
         effect_list = await fix_gossiper_role(ctx.guild)
