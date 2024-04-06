@@ -2,3 +2,4 @@
 - Complete the first version.
 - Add tag_the_gossiper command.
 - Add judge check for all commands.
+- Fix config.json path with absolute path.

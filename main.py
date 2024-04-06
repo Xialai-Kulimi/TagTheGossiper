@@ -18,6 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
+
 import interactions
 from interactions import (
     Button,
@@ -59,10 +61,11 @@ async def check_is_admin(ctx: interactions.SlashContext):
 class Config(BaseModel):
     gossiper_base: str = "吃瓜观光团"
 
+path = f"{os.path.dirname(__file__)}/config.json"
 
 def load_config() -> Config:
     try:
-        with open("config.json", "r") as f:
+        with open(path, "r") as f:
             config = Config.model_validate_json(f.read())
     except Exception as e:
         console.log(f"[red] Error occur: {e} when load_config")
@@ -72,7 +75,7 @@ def load_config() -> Config:
 
 
 def save_config(config: Config):
-    with open("config.json", "w") as f:
+    with open(path, "w") as f:
         f.write(config.model_dump_json(indent=4))
 
 
