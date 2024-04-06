@@ -162,7 +162,7 @@ class Gossiper(interactions.Extension):
         modal_ctx: ModalContext = await ctx.bot.wait_for_modal(my_modal)
 
         new_base = modal_ctx.responses["new_base"]
-        await modal_ctx.respond()
+        await modal_ctx.defer(edit_origin=True, ephemeral=True)
 
         config.gossiper_base = new_base
         save_config(config)
