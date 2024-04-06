@@ -120,6 +120,7 @@ async def fix_gossiper_role(guild: interactions.Guild):
 
 @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
 async def handle_give_gossiper_role(ctx: interactions.ComponentContext):
+    console.log(ctx)
     config = load_config()
 
     # check if author need add role
@@ -164,7 +165,7 @@ class Gossiper(interactions.Extension):
 
         config.gossiper_base = new_base
         save_config(config)
-        await ctx.send(f"{config}", ephemeral=True)
+        await ctx.respond(f"{config}", ephemeral=True)
 
     @module_base.subcommand(
         "send_role_giver", sub_cmd_description="傳送獲得吃瓜觀光團的獲得按鈕到此頻道"
