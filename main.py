@@ -119,7 +119,7 @@ async def create_new_gossiper_role(guild: interactions.Guild) -> interactions.Ro
             role.position, reason="吃瓜觀光團模組：將新的吃瓜觀光團身份組移到該有的位置"
         )
 
-    if not role:
+    else:
         new_role = await guild.create_role(
             name=config.gossiper_base + avaliable_suffix[0],
             permissions=0,
