@@ -1,8 +1,8 @@
 """
-Discord-Bot-Module template. For detailed usages,
- check https://interactions-py.github.io/interactions.py/
+TagTheGossiper Module for init core. For detailed usages,
+ check https://github.com/Xialai-Kulimi/TagTheGossiper/
 
-Copyright (C) 2024  __retr0.init__
+Copyright (C) 2024  Kulimi
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,22 +28,13 @@ from interactions import (
     ModalContext,
     Modal,
     ShortText,
-    check,
-    has_role,
 )
-from interactions.api.events import Component
 
-# Use the following method to import the internal module in the current same directory
-from . import internal_t
 from pydantic import BaseModel
 
-# You can listen to the interactions.py event
-from interactions.api.events import MessageCreate, InteractionCreate
-
-# You can create a background task
 
 from rich.console import Console
-import json
+
 
 console = Console()
 
@@ -100,10 +91,9 @@ async def create_new_gossiper_role(guild: interactions.Guild) -> interactions.Ro
 
     role = None
     for role in await get_all_gossiper_roles(guild):
-        role_suffix = role.name.replace(config.gossiper_base, '')
+        role_suffix = role.name.replace(config.gossiper_base, "")
         if role_suffix in avaliable_suffix:
             avaliable_suffix.remove(role_suffix)
-        
 
     if role:
         new_role = await guild.create_role(

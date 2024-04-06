@@ -4,3 +4,4 @@
 - Add judge check for all commands.
 - Fix config.json path with absolute path.
 - Use aiofiles to handle fp.
+- Clean comments and sign.
