@@ -52,12 +52,12 @@ class Config(BaseModel):
 
 
 def load_config() -> Config:
-    with open("config.json", "rw") as f:
-        try:
+    try:
+        with open("config.json", "r") as f:
             config = Config.model_validate_json(f.read())
-        except Exception as e:
-            console.log(f"[red] Error occur: {e} when load_config")
-            config = Config()
+    except Exception as e:
+        console.log(f"[red] Error occur: {e} when load_config")
+        config = Config()
 
     return config
 
@@ -171,7 +171,7 @@ class Gossiper(interactions.Extension):
     )
     async def send_role_giver(self, ctx: interactions.SlashContext):
 
-        await ctx.send(
+        await ctx.channel.send(
             embed=interactions.Embed(title="點擊下方按鈕獲得吃瓜觀光團身份組"),
             components=[button],
         )
