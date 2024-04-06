@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 
+import aiofiles
 import interactions
 from interactions import (
     Button,
@@ -61,12 +62,14 @@ async def check_is_admin(ctx: interactions.SlashContext):
 class Config(BaseModel):
     gossiper_base: str = "吃瓜观光团"
 
+
 path = f"{os.path.dirname(__file__)}/config.json"
 
-def load_config() -> Config:
+
+async def load_config() -> Config:
     try:
-        with open(path, "r") as f:
-            config = Config.model_validate_json(f.read())
+        async with aiofiles.open(path, "r") as f:
+            config = Config.model_validate_json(await f.read())
     except Exception as e:
         console.log(f"[red] Error occur: {e} when load_config")
         config = Config()
@@ -74,9 +77,9 @@ def load_config() -> Config:
     return config
 
 
-def save_config(config: Config):
-    with open(path, "w") as f:
-        f.write(config.model_dump_json(indent=4))
+async def save_config(config: Config):
+    async with aiofiles.open(path, "w") as f:
+        await f.write(config.model_dump_json(indent=4))
 
 
 # defining and sending the button
@@ -87,16 +90,16 @@ button = Button(
 )
 
 
-def get_all_gossiper_roles(guild: interactions.Guild) -> list[interactions.Role]:
-    config = load_config()
+async def get_all_gossiper_roles(guild: interactions.Guild) -> list[interactions.Role]:
+    config = await load_config()
     return [role for role in guild.roles if config.gossiper_base in role.name]
 
 
 async def create_new_gossiper_role(guild: interactions.Guild) -> interactions.Role:
-    config = load_config()
+    config = await load_config()
 
     role = None
-    for role in get_all_gossiper_roles(guild):
+    for role in await get_all_gossiper_roles(guild):
         if role.name.endswith(avaliable_suffix[0]):
             avaliable_suffix.pop(0)
 
@@ -130,7 +133,7 @@ async def create_new_gossiper_role(guild: interactions.Guild) -> interactions.Ro
 async def add_gossiper_role(
     guild: interactions.Guild, member: interactions.Member
 ) -> interactions.Role:
-    for role in get_all_gossiper_roles(guild):
+    for role in await get_all_gossiper_roles(guild):
         if len(role.members) < MAX_MEMBER_PER_ROLE:
             await member.add_role(role, reason="吃瓜觀光團模組：添加吃瓜觀光團身份組")
             return role
@@ -144,12 +147,15 @@ async def add_gossiper_role(
 async def fix_gossiper_role(guild: interactions.Guild) -> list[interactions.Member]:
 
     add_gossiper_role_list = []
-    for role in get_all_gossiper_roles(guild):
+    for role in await get_all_gossiper_roles(guild):
         if len(role.members) > MAX_MEMBER_PER_ROLE:
             current_gossiper_role_list = role.members[MAX_MEMBER_PER_ROLE:]
             add_gossiper_role_list += current_gossiper_role_list
             for member in current_gossiper_role_list:
-                await member.remove_role(role, reason=f"吃瓜觀光團模組：此身份組（{role.name}）超過最大人數（{MAX_MEMBER_PER_ROLE}）")
+                await member.remove_role(
+                    role,
+                    reason=f"吃瓜觀光團模組：此身份組（{role.name}）超過最大人數（{MAX_MEMBER_PER_ROLE}）",
+                )
 
     for member in add_gossiper_role_list:
         await add_gossiper_role(guild, member)
@@ -165,7 +171,7 @@ class Gossiper(interactions.Extension):
 
     @module_base.subcommand("help", sub_cmd_description="顯示關於吃瓜觀光團的介紹")
     async def help(self, ctx: interactions.SlashContext):
-        config = load_config()
+        config = await load_config()
         await ctx.respond(
             embed=interactions.Embed(
                 title="吃瓜觀光團模組",
@@ -189,12 +195,11 @@ class Gossiper(interactions.Extension):
                 color=0xFF5252,
             )
         )
-        
 
     @module_base.subcommand("config", sub_cmd_description="設定吃瓜觀光團的相關設定")
     async def config(self, ctx: interactions.SlashContext):
 
-        config = load_config()
+        config = await load_config()
         my_modal = Modal(
             ShortText(
                 label="設定共用基底，會將所有包含共同基底的身份組視為吃瓜觀光團身份組",
@@ -211,7 +216,7 @@ class Gossiper(interactions.Extension):
         await modal_ctx.defer(edit_origin=True, ephemeral=True)
 
         config.gossiper_base = new_base
-        save_config(config)
+        await save_config(config)
         await ctx.respond(f"已設定，新的設定如下\n```py\n{config}\n```", ephemeral=True)
 
     @module_base.subcommand(
@@ -225,8 +230,6 @@ class Gossiper(interactions.Extension):
         )
         await ctx.respond("已傳送獲得吃瓜觀光團按鈕到此頻道", ephemeral=True)
 
-    
-    
     @module_base.subcommand(
         "manual_fix", sub_cmd_description="手動修復所有成員的吃瓜觀光團身份組狀態"
     )
@@ -236,19 +239,17 @@ class Gossiper(interactions.Extension):
             f"修復了{len(effect_list)}位成員的吃瓜觀光團身份組狀態。", ephemeral=True
         )
 
-    
-    @module_base.subcommand(
-        "tag", sub_cmd_description="提及所有吃瓜觀光團身份組"
-    )
+    @module_base.subcommand("tag", sub_cmd_description="提及所有吃瓜觀光團身份組")
     async def tag(self, ctx: interactions.SlashContext):
 
         await ctx.respond(
-            f"{' '.join([r.mention for r in get_all_gossiper_roles(ctx.guild)])}", allowed_mentions=interactions.AllowedMentions.all()
+            f"{' '.join([r.mention for r in await get_all_gossiper_roles(ctx.guild)])}",
+            allowed_mentions=interactions.AllowedMentions.all(),
         )
 
     @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
     async def handle_give_gossiper_role(self, ctx: interactions.ComponentContext):
-        config = load_config()
+        config = await load_config()
 
         # check if author need add role
         for role in ctx.author.roles:
