@@ -42,6 +42,10 @@ import json
 
 console = Console()
 
+MAX_MEMBER_PER_ROLE = 100
+
+avaliable_suffix = [""] + [str(i + 2) for i in range(500)]
+
 
 class Config(BaseModel):
     gossiper_base: str = "吃瓜观光团"
@@ -71,9 +75,68 @@ button = Button(
 )
 
 
+def get_all_gossiper_roles(guild: interactions.Guild) -> list[interactions.Role]:
+    config = load_config()
+    return [role for role in guild.roles if config.gossiper_base in role.name]
+
+
+def create_new_gossiper_role(guild: interactions.Guild) -> interactions.Role:
+    config = load_config()
+
+    for role in get_all_gossiper_roles(guild):
+        if role.name.endswith(avaliable_suffix[0]):
+            avaliable_suffix.pop(0)
+
+    return guild.create_role(name=config.gossiper_base + avaliable_suffix[0])
+
+
+async def add_gossiper_role(
+    guild: interactions.Guild, member: interactions.Member
+) -> interactions.Role:
+    for role in get_all_gossiper_roles(guild):
+        if len(role.members) < MAX_MEMBER_PER_ROLE:
+            await member.add_role(role)
+            return role
+
+    # no valid role exist, create new role
+    role = create_new_gossiper_role(guild)
+    await member.add_role(role)
+    return role
+
+
+async def fix_gossiper_role(guild: interactions.Guild):
+
+    add_gossiper_role_list = []
+    for role in get_all_gossiper_roles(guild):
+        if len(role.members) > MAX_MEMBER_PER_ROLE:
+            current_gossiper_role_list = role.members[MAX_MEMBER_PER_ROLE:]
+            add_gossiper_role_list += current_gossiper_role_list
+            for member in current_gossiper_role_list:
+                await member.remove_role(role)
+
+    for member in add_gossiper_role_list:
+        await add_gossiper_role(guild, member)
+
+
 @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
-async def my_callback(ctx: interactions.ComponentContext):
-    await ctx.send("You clicked it!")
+async def handle_give_gossiper_role(ctx: interactions.ComponentContext):
+    config = load_config()
+
+    # check if author need add role
+    for role in ctx.author.roles:
+        if config.gossiper_base in role.name:
+            await ctx.respond(
+                f"你已經有一個吃瓜觀光團身份組了（{role.mention}）", ephemeral=True
+            )
+            return
+
+    role = await add_gossiper_role(ctx.guild, ctx.author)
+    if role:
+        await ctx.respond(f"成功添加吃瓜觀光團身份組「{role.mention}」", ephemeral=True)
+    else:
+        await ctx.respond("添加失敗，請向管理員聯絡", ephemeral=True)
+    # clean current gossiper roles
+    await fix_gossiper_role(ctx.guild)
 
 
 class Gossiper(interactions.Extension):
@@ -106,12 +169,10 @@ class Gossiper(interactions.Extension):
     @module_base.subcommand(
         "send_role_giver", sub_cmd_description="傳送獲得吃瓜觀光團的獲得按鈕到此頻道"
     )
-    
     async def send_role_giver(self, ctx: interactions.SlashContext):
-    
-        await ctx.respond(
+
+        await ctx.send(
             embed=interactions.Embed(title="點擊下方按鈕獲得吃瓜觀光團身份組"),
             components=[button],
         )
-
-    
+        await ctx.respond("已傳送獲得吃瓜觀光團按鈕到此頻道", ephemeral=True)
