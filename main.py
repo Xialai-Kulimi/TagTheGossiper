@@ -100,7 +100,7 @@ async def create_new_gossiper_role(guild: interactions.Guild) -> interactions.Ro
 
     role = None
     for role in await get_all_gossiper_roles(guild):
-        if role.name.endswith(avaliable_suffix[0]):
+        if role.name == config.gossiper_base + avaliable_suffix[0]:
             avaliable_suffix.pop(0)
 
     if role:
