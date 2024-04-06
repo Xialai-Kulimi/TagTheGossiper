@@ -129,7 +129,7 @@ async def add_gossiper_role(
 ) -> interactions.Role:
     for role in get_all_gossiper_roles(guild):
         if len(role.members) < MAX_MEMBER_PER_ROLE:
-            await member.add_role(role)
+            await member.add_role(role, reason="吃瓜觀光團模組：添加吃瓜觀光團身份組")
             return role
 
     # no valid role exist, create new role
@@ -138,7 +138,7 @@ async def add_gossiper_role(
     return role
 
 
-async def fix_gossiper_role(guild: interactions.Guild):
+async def fix_gossiper_role(guild: interactions.Guild) -> list[interactions.Member]:
 
     add_gossiper_role_list = []
     for role in get_all_gossiper_roles(guild):
@@ -146,10 +146,11 @@ async def fix_gossiper_role(guild: interactions.Guild):
             current_gossiper_role_list = role.members[MAX_MEMBER_PER_ROLE:]
             add_gossiper_role_list += current_gossiper_role_list
             for member in current_gossiper_role_list:
-                await member.remove_role(role)
+                await member.remove_role(role, reason=f"吃瓜觀光團模組：此身份組（{role.name}）超過最大人數（{MAX_MEMBER_PER_ROLE}）")
 
     for member in add_gossiper_role_list:
         await add_gossiper_role(guild, member)
+    return add_gossiper_role_list
 
 
 class Gossiper(interactions.Extension):
@@ -158,6 +159,25 @@ class Gossiper(interactions.Extension):
         description="吃瓜觀光團相關指令",
         checks=[check_is_admin],
     )
+
+    @module_base.subcommand("help", sub_cmd_description="顯示關於吃瓜觀光團的介紹")
+    async def help(self, ctx: interactions.SlashContext):
+        config = load_config()
+        await ctx.respond(
+            embed=interactions.Embed(
+                title="吃瓜觀光團模組",
+                description=f"""
+吃瓜觀光團模組主要是為了解決吃瓜觀光團管理、新建、提及等等方面的不方面。
+其運作原理為：
+1. 吃瓜觀光團身份組的判斷條件為身份組名稱包含共用基底，共用基底可以透過 `config` 指令設定，預設為「吃瓜观光团」，目前為「{config.gossiper_base}」
+2. 每個吃瓜觀光團身份組最多應該只有{MAX_MEMBER_PER_ROLE}人。
+3. 按下按鈕後，如果有低於一百人的吃瓜觀光團身份組，則直接將其加入該身份組
+4. 如果沒有可用的身份組，將會用現有的吃瓜觀光團身份組建立新的吃瓜觀光團身份組。
+""",
+                color=0xFF5252,
+            )
+        )
+        
 
     @module_base.subcommand("config", sub_cmd_description="設定吃瓜觀光團的相關設定")
     async def config(self, ctx: interactions.SlashContext):
@@ -193,6 +213,18 @@ class Gossiper(interactions.Extension):
         )
         await ctx.respond("已傳送獲得吃瓜觀光團按鈕到此頻道", ephemeral=True)
 
+    
+    
+    @module_base.subcommand(
+        "manual_fix", sub_cmd_description="提及所有吃瓜觀光團身份組"
+    )
+    async def manual_fix(self, ctx: interactions.SlashContext):
+        effect_list = await fix_gossiper_role(ctx.guild)
+        await ctx.respond(
+            f"修復了{len(effect_list)}位成員的吃瓜觀光團身份組狀態。", ephemeral=True
+        )
+
+    
     @module_base.subcommand(
         "tag", sub_cmd_description="提及所有吃瓜觀光團身份組"
     )
