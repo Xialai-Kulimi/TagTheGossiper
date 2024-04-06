@@ -51,7 +51,7 @@ avaliable_suffix = [""] + [str(i + 2) for i in range(500)]
 JUDGE_ROLE_ID = 1210108577008853012
 
 
-def check_is_admin(ctx: interactions.SlashContext):
+async def check_is_admin(ctx: interactions.SlashContext):
 
     return ctx.author.has_role(JUDGE_ROLE_ID) or ctx.author.id in ctx.bot.owner_ids
 
