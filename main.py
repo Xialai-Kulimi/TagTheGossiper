@@ -25,6 +25,7 @@ from interactions import (
     ModalContext,
     Modal,
     ShortText,
+    check,
 )
 from interactions.api.events import Component
 
@@ -82,7 +83,7 @@ def get_all_gossiper_roles(guild: interactions.Guild) -> list[interactions.Role]
 
 async def create_new_gossiper_role(guild: interactions.Guild) -> interactions.Role:
     config = load_config()
-    
+
     role = None
     for role in get_all_gossiper_roles(guild):
         if role.name.endswith(avaliable_suffix[0]):
@@ -149,6 +150,7 @@ class Gossiper(interactions.Extension):
     )
 
     @module_base.subcommand("config", sub_cmd_description="設定吃瓜觀光團的相關設定")
+    @check()
     async def config(self, ctx: interactions.SlashContext):
 
         config = load_config()
@@ -184,7 +186,6 @@ class Gossiper(interactions.Extension):
 
     @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
     async def handle_give_gossiper_role(self, ctx: interactions.ComponentContext):
-        console.log(ctx)
         config = load_config()
 
         # check if author need add role
@@ -204,3 +205,12 @@ class Gossiper(interactions.Extension):
             await ctx.respond("添加失敗，請向管理員聯絡", ephemeral=True)
         # clean current gossiper roles
         await fix_gossiper_role(ctx.guild)
+
+    @module_base.subcommand(
+        "tag_the_gossiper", sub_cmd_description="提及所有吃瓜觀光團身份組到這個頻道"
+    )
+    async def send_role_giver(self, ctx: interactions.SlashContext):
+
+        await ctx.respond(
+            f"{' '.join([r.mention for r in get_all_gossiper_roles(ctx.guild)])}"
+        )
