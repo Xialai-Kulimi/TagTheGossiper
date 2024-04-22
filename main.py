@@ -198,7 +198,14 @@ class Gossiper(interactions.Extension):
         opt_type=OptionType.STRING,
         autocomplete=True,
     )
-    async def config(self, ctx: interactions.SlashContext, new_base: str = None):
+    @slash_option(
+        name="max_member_per_role",
+        description="每個吃瓜觀光團身份組的最高人數",
+        required=False,
+        opt_type=OptionType.INTEGER,
+        autocomplete=True,
+    )
+    async def config(self, ctx: interactions.SlashContext, new_base: str = None, max_member_per_role: int = None):
 
         config = await load_config()
         # my_modal = Modal(
@@ -217,28 +224,32 @@ class Gossiper(interactions.Extension):
         # await modal_ctx.defer(edit_origin=True, ephemeral=True)
         if new_base:
             config.gossiper_base = new_base
+        
+        if max_member_per_role:
+            config.MAX_MEMBER_PER_ROLE = max_member_per_role
             
         await save_config(config)
         await ctx.respond(f"已設定，新的設定如下\n```py\n{config}\n```", ephemeral=True)
+        
     @config.autocomplete("new_base")
-    async def autocomplete(ctx: AutocompleteContext):
-        string_option_input = ctx.input_text  # can be empty
-        # you can use ctx.kwargs.get("name") to get the current state of other options - note they can be empty too
-
-        # make sure you respond within three seconds
+    async def autocomplete(self, ctx: AutocompleteContext):
+        config = await load_config()
         await ctx.send(
             choices=[
                 {
-                    "name": f"{string_option_input}a",
-                    "value": f"{string_option_input}a",
+                    "name": f"目前的基底：「{config.gossiper_base}」",
+                    "value": config.gossiper_base,
                 },
+            ]
+        )
+    @config.autocomplete("max_member_per_role")
+    async def autocomplete(self, ctx: AutocompleteContext):
+        config = await load_config()
+        await ctx.send(
+            choices=[
                 {
-                    "name": f"{string_option_input}b",
-                    "value": f"{string_option_input}b",
-                },
-                {
-                    "name": f"{string_option_input}c",
-                    "value": f"{string_option_input}c",
+                    "name": f"目前的人數上限：「{config.MAX_MEMBER_PER_ROLE}」",
+                    "value": config.MAX_MEMBER_PER_ROLE,
                 },
             ]
         )
