@@ -175,7 +175,7 @@ class Gossiper(interactions.Extension):
 ## 介紹
 0. 只有法官可以使用本模組的指令。
 1. 吃瓜觀光團身份組的判斷條件為身份組名稱包含共用基底，共用基底可以透過 `config` 指令設定，預設為「吃瓜观光团」，目前為「{config.gossiper_base}」
-2. 每個吃瓜觀光團身份組最多應該只有{MAX_MEMBER_PER_ROLE}人。
+2. 每個吃瓜觀光團身份組最多應該只有{config.MAX_MEMBER_PER_ROLE}人。
 3. 按下按鈕後，如果有低於一百人的吃瓜觀光團身份組，則直接將其加入該身份組
 4. 如果沒有可用的身份組，將會用現有的吃瓜觀光團身份組建立新的吃瓜觀光團身份組。
 
@@ -205,32 +205,22 @@ class Gossiper(interactions.Extension):
         opt_type=OptionType.INTEGER,
         autocomplete=True,
     )
-    async def config(self, ctx: interactions.SlashContext, new_base: str = None, max_member_per_role: int = None):
+    async def config(
+        self,
+        ctx: interactions.SlashContext,
+        new_base: str = None,
+        max_member_per_role: int = None,
+    ):
 
         config = await load_config()
-        # my_modal = Modal(
-        #     ShortText(
-        #         label="設定共用基底，會將所有包含共同基底的身份組視為吃瓜觀光團身份組",
-        #         custom_id="new_base",
-        #         placeholder=f"目前為「{config.gossiper_base}」",
-        #     ),
-        #     title="吃瓜觀光團設定",
-        # )
-        # await ctx.send_modal(modal=my_modal)
-
-        # modal_ctx: ModalContext = await ctx.bot.wait_for_modal(my_modal)
-
-        # new_base = modal_ctx.responses["new_base"]
-        # await modal_ctx.defer(edit_origin=True, ephemeral=True)
         if new_base:
             config.gossiper_base = new_base
-        
         if max_member_per_role:
             config.MAX_MEMBER_PER_ROLE = max_member_per_role
-            
+
         await save_config(config)
         await ctx.respond(f"已設定，新的設定如下\n```py\n{config}\n```", ephemeral=True)
-        
+
     @config.autocomplete("new_base")
     async def autocomplete(self, ctx: AutocompleteContext):
         config = await load_config()
@@ -242,6 +232,7 @@ class Gossiper(interactions.Extension):
                 },
             ]
         )
+
     @config.autocomplete("max_member_per_role")
     async def autocomplete(self, ctx: AutocompleteContext):
         config = await load_config()
@@ -277,10 +268,12 @@ class Gossiper(interactions.Extension):
     @module_base.subcommand("tag", sub_cmd_description="提及所有吃瓜觀光團身份組")
     async def tag(self, ctx: interactions.SlashContext):
 
-        await ctx.respond(
-            f"{' '.join([r.mention for r in await get_all_gossiper_roles(ctx.guild)])}",
-            allowed_mentions=interactions.AllowedMentions.all(),
-        )
+        for role in await get_all_gossiper_roles(ctx.guild):
+            await ctx.channel.send(
+                role.mention,
+                allowed_mentions=interactions.AllowedMentions.all(),
+            )
+        await ctx.respond(silent=True)
 
     @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
     async def handle_give_gossiper_role(self, ctx: interactions.ComponentContext):
