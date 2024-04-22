@@ -46,7 +46,9 @@ JUDGE_ROLE_ID = 1210108577008853012
 
 async def check_is_admin(ctx: interactions.SlashContext):
 
-    return ctx.author.has_role(JUDGE_ROLE_ID) or ctx.author.id in ctx.bot.owner_ids
+    return ctx.author.has_role(JUDGE_ROLE_ID) or ctx.author.has_permission(
+        interactions.Permissions.ADMINISTRATOR
+    )
 
 
 class Config(BaseModel):
@@ -175,15 +177,15 @@ class Gossiper(interactions.Extension):
 ## 介紹
 0. 只有法官可以使用本模組的指令。
 1. 吃瓜觀光團身份組的判斷條件為身份組名稱包含共用基底，共用基底可以透過 `config` 指令設定，預設為「吃瓜观光团」，目前為「{config.gossiper_base}」
-2. 每個吃瓜觀光團身份組最多應該只有{config.MAX_MEMBER_PER_ROLE}人。
-3. 按下按鈕後，如果有低於一百人的吃瓜觀光團身份組，則直接將其加入該身份組
+2. 每個吃瓜觀光團身份組最多應該只有 {config.MAX_MEMBER_PER_ROLE} 人。
+3. 按下按鈕後，如果有低於 {config.MAX_MEMBER_PER_ROLE} 人的吃瓜觀光團身份組，則直接將其加入該身份組
 4. 如果沒有可用的身份組，將會用現有的吃瓜觀光團身份組建立新的吃瓜觀光團身份組。
 
 ## 指令
 - `config`：設定吃瓜觀光團的設定，目前僅可設定吃瓜觀光團的共用基底。
 - `send_role_giver`：在當前頻道傳送一個可以添加吃瓜觀光團身份組的按鈕。
 - `tag`：提及所有的吃瓜觀光團身份組。
-- `manual_fix`：為本群組的吃瓜觀光團身份組超出一百人的部分重新分配吃瓜觀光團身份組。
+- `manual_fix`：為本群組的吃瓜觀光團身份組超出 {config.MAX_MEMBER_PER_ROLE} 人的部分重新分配吃瓜觀光團身份組。
 
 """,
                 color=0xFF5252,
@@ -273,7 +275,7 @@ class Gossiper(interactions.Extension):
                 role.mention,
                 allowed_mentions=interactions.AllowedMentions.all(),
             )
-        await ctx.respond(silent=True)
+        await ctx.respond()
 
     @interactions.component_callback("kulimi_TagTheGossiper_give_gossiper_role")
     async def handle_give_gossiper_role(self, ctx: interactions.ComponentContext):
