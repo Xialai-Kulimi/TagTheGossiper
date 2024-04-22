@@ -23,11 +23,11 @@ import os
 import aiofiles
 import interactions
 from interactions import (
+    slash_option,
+    OptionType,
     Button,
     ButtonStyle,
-    ModalContext,
-    Modal,
-    ShortText,
+    AutocompleteContext,
 )
 
 from pydantic import BaseModel
@@ -38,7 +38,6 @@ from rich.console import Console
 
 console = Console()
 
-MAX_MEMBER_PER_ROLE = 100
 
 avaliable_suffix = [""] + [str(i + 2) for i in range(500)]
 
@@ -52,6 +51,7 @@ async def check_is_admin(ctx: interactions.SlashContext):
 
 class Config(BaseModel):
     gossiper_base: str = "吃瓜观光团"
+    MAX_MEMBER_PER_ROLE: int = 99
 
 
 path = f"{os.path.dirname(__file__)}/config.json"
@@ -125,8 +125,10 @@ async def create_new_gossiper_role(guild: interactions.Guild) -> interactions.Ro
 async def add_gossiper_role(
     guild: interactions.Guild, member: interactions.Member
 ) -> interactions.Role:
+    config = await load_config()
+
     for role in await get_all_gossiper_roles(guild):
-        if len(role.members) < MAX_MEMBER_PER_ROLE:
+        if len(role.members) < config.MAX_MEMBER_PER_ROLE:
             await member.add_role(role, reason="吃瓜觀光團模組：添加吃瓜觀光團身份組")
             return role
 
@@ -137,16 +139,16 @@ async def add_gossiper_role(
 
 
 async def fix_gossiper_role(guild: interactions.Guild) -> list[interactions.Member]:
-
+    config = await load_config()
     add_gossiper_role_list = []
     for role in await get_all_gossiper_roles(guild):
-        if len(role.members) > MAX_MEMBER_PER_ROLE:
-            current_gossiper_role_list = role.members[MAX_MEMBER_PER_ROLE:]
+        if len(role.members) > config.MAX_MEMBER_PER_ROLE:
+            current_gossiper_role_list = role.members[config.MAX_MEMBER_PER_ROLE :]
             add_gossiper_role_list += current_gossiper_role_list
             for member in current_gossiper_role_list:
                 await member.remove_role(
                     role,
-                    reason=f"吃瓜觀光團模組：此身份組（{role.name}）超過最大人數（{MAX_MEMBER_PER_ROLE}）",
+                    reason=f"吃瓜觀光團模組：此身份組（{role.name}）超過最大人數（{config.MAX_MEMBER_PER_ROLE}）",
                 )
 
     for member in add_gossiper_role_list:
@@ -189,27 +191,57 @@ class Gossiper(interactions.Extension):
         )
 
     @module_base.subcommand("config", sub_cmd_description="設定吃瓜觀光團的相關設定")
-    async def config(self, ctx: interactions.SlashContext):
+    @slash_option(
+        name="new_base",
+        description="共用基底，會將所有包含共同基底的身份組視為吃瓜觀光團身份組",
+        required=False,
+        opt_type=OptionType.STRING,
+        autocomplete=True,
+    )
+    async def config(self, ctx: interactions.SlashContext, new_base: str = None):
 
         config = await load_config()
-        my_modal = Modal(
-            ShortText(
-                label="設定共用基底，會將所有包含共同基底的身份組視為吃瓜觀光團身份組",
-                custom_id="new_base",
-                placeholder=f"目前為「{config.gossiper_base}」",
-            ),
-            title="吃瓜觀光團設定",
-        )
-        await ctx.send_modal(modal=my_modal)
+        # my_modal = Modal(
+        #     ShortText(
+        #         label="設定共用基底，會將所有包含共同基底的身份組視為吃瓜觀光團身份組",
+        #         custom_id="new_base",
+        #         placeholder=f"目前為「{config.gossiper_base}」",
+        #     ),
+        #     title="吃瓜觀光團設定",
+        # )
+        # await ctx.send_modal(modal=my_modal)
 
-        modal_ctx: ModalContext = await ctx.bot.wait_for_modal(my_modal)
+        # modal_ctx: ModalContext = await ctx.bot.wait_for_modal(my_modal)
 
-        new_base = modal_ctx.responses["new_base"]
-        await modal_ctx.defer(edit_origin=True, ephemeral=True)
-
-        config.gossiper_base = new_base
+        # new_base = modal_ctx.responses["new_base"]
+        # await modal_ctx.defer(edit_origin=True, ephemeral=True)
+        if new_base:
+            config.gossiper_base = new_base
+            
         await save_config(config)
         await ctx.respond(f"已設定，新的設定如下\n```py\n{config}\n```", ephemeral=True)
+    @config.autocomplete("new_base")
+    async def autocomplete(ctx: AutocompleteContext):
+        string_option_input = ctx.input_text  # can be empty
+        # you can use ctx.kwargs.get("name") to get the current state of other options - note they can be empty too
+
+        # make sure you respond within three seconds
+        await ctx.send(
+            choices=[
+                {
+                    "name": f"{string_option_input}a",
+                    "value": f"{string_option_input}a",
+                },
+                {
+                    "name": f"{string_option_input}b",
+                    "value": f"{string_option_input}b",
+                },
+                {
+                    "name": f"{string_option_input}c",
+                    "value": f"{string_option_input}c",
+                },
+            ]
+        )
 
     @module_base.subcommand(
         "send_role_giver", sub_cmd_description="傳送獲得吃瓜觀光團的獲得按鈕到此頻道"
