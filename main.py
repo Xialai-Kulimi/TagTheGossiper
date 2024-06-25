@@ -41,7 +41,7 @@ console = Console()
 
 avaliable_suffix = [""] + [str(i + 2) for i in range(500)]
 
-JUDGE_ROLE_ID = 1210108577008853012
+JUDGE_ROLE_ID = 1247144717083476051
 
 
 async def check_is_admin(ctx: interactions.SlashContext):
